@@ -1,0 +1,255 @@
+//dependencies
+const { Provider } = ReactRedux;
+
+//calculator container component
+class Calculator extends React.Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      firstOperand: null,
+      waitingForSecondOperand: false,
+      operator: null,
+      displayValue: "0",
+      buttonInfo: [
+        {
+          "keyChar":  "0",
+          "id":       "zero",
+          "class":    "digit"
+        },
+        {
+          "keyChar":  "1",
+          "id":       "one",
+          "class":    "digit"
+        },
+        {
+          "keyChar":  "2",
+          "id":       "two",
+          "class":    "digit"
+        },
+        {
+          "keyChar":  "3",
+          "id":       "three",
+          "class":    "digit"
+        },
+        {
+          "keyChar":  "4",
+          "id":       "four",
+          "class":    "digit"
+        },
+        {
+          "keyChar":  "5",
+          "id":       "five",
+          "class":    "digit"
+        },
+        {
+          "keyChar":  "6",
+          "id":       "six",
+          "class":    "digit"
+        },
+        {
+          "keyChar":  "7",
+          "id":       "seven",
+          "class":    "digit"
+        },
+        {
+          "keyChar":  "8",
+          "id":       "eight",
+          "class":    "digit"
+        },
+        {
+          "keyChar":  "9",
+          "id":       "nine",
+          "class":    "digit"
+        },
+        {
+          "keyChar":  "=",
+          "id":       "equals",
+          "class":    "operator"
+        },
+        {
+          "keyChar":  "+",
+          "id":       "add",
+          "class":    "operator"
+        },
+        {
+          "keyChar":  "-",
+          "id":       "subtract",
+          "class":    "operator"
+        },
+        {
+          "keyChar":  "*",
+          "id":       "multiply",
+          "class":    "operator"
+        },
+        {
+          "keyChar":  "/",
+          "id":       "divide",
+          "class":    "operator"
+        },
+        {
+          "keyChar":  ".",
+          "id":       "decimal",
+          "class":    "decimal"
+        },
+        {
+          "keyChar":  "Clear",
+          "id":       "clear",
+          "class":    "clear"
+        }
+      ]
+    },
+    this.handlePress = this.handlePress.bind(this);
+    this.inputDigit = this.inputDigit.bind(this);
+    this.inputDecimal = this.inputDecimal.bind(this);
+    this.inputOperator = this.inputOperator.bind(this);
+    this.clearCalculator = this.clearCalculator.bind(this);
+  }
+ 
+  //logic when any digit button is pressed
+  inputDigit(digit) {
+    //'waitingForSecondOperand' is true when an operator(+,-,*,/,=) was last selected. Once an operator is selected it's fine to clear the display and show the new digit because the last displayed value has been calculated and saved in 'firstOperand'.
+    if (this.state.waitingForSecondOperand === true) {
+      //update the display and flip the waiting flag.
+      this.setState({ displayValue: digit,
+                    waitingForSecondOperand: false
+                    });
+    } else { 
+      //if the default of 0 is still showing, then just replace it with the digit selected, if the default isn't there (user has selected another number previously), then add on to it.
+      this.setState({ displayValue: this.state.displayValue === '0' ? digit : this.state.displayValue + digit });}
+  }  
+  
+  //logic when decimal button is pressed
+  inputDecimal(decimal) {
+    //don't let the user add a '.' after they have selected an operator, they must select 0.x if they want that.
+    if (this.state.waitingForSecondOperand === true) return;
+    //verify number doesn't have a decimal already
+    if (!this.state.displayValue.includes('.')){
+      //if it doesn't, then add it to the end of the number
+      this.setState({ displayValue: this.state.displayValue + decimal })
+    }
+  }
+  
+  //logic when any operator(+,-,/,=,*) button is pressed
+  inputOperator(nextOperator) {
+    //operator and waitingForSecond can only both be true right after pressing an operator. Once a digit is selected waiting flips back. Knowning this lets us switch out the operator if the user switches their mind.
+    if (this.state.operator && this.state.waitingForSecondOperand) {
+      this.setState({ operator: nextOperator });
+      return;
+    }
+    
+    //if this is the first time the user has selected an operator there is no math to do, just move the value over and hold it in state
+    if (this.state.firstOperand === null) {
+      //make sure to use parse so it can read the string value in state
+      this.setState({ firstOperand: parseFloat(this.state.displayValue) })
+    } 
+    //if firstOperand has a vlalue then do the match and re-store it in state.
+    else {
+      //warning: eval has security concerns, only use for learning.
+      let result = eval(this.state.firstOperand + this.state.operator + this.state.displayValue);
+      //store the new value and update the display for the user
+      this.setState({ displayValue: result,
+                      firstOperand: result
+                    });
+    }
+    //flag that you are waiting to select a number next, and store the operator for the next match calculation. 
+    this.setState({ waitingForSecondOperand: true,
+                    operator: nextOperator
+                  });
+  }
+  
+  //set the state values all back to the default
+  clearCalculator(){
+    this.setState({ firstOperand: null,
+                    waitingForSecondOperand: false,
+                    operator: null,
+                    displayValue: "0"
+                  });
+  }
+  //calc-pad is the parent element so it contains the references to all the button elements inside it. Add listeners for onClick events for all buttons inside the parent when it's rendered. 
+  componentDidMount() {
+    const keys = document.querySelector('#calc-pad');
+    keys.addEventListener('click', this.handlePress)
+  }
+  
+  //remove listeners for onClick events for all buttons inside the parent when it's removed from DOM.
+  componentWillUnmount() {
+    const keys = document.querySelector('#calc-pad');
+    keys.removeEventListener('click', this.handlePress)
+  }
+  
+  //liseners will run this any time a button is pressed
+  handlePress(event) {
+    //use early return statement to skip element clicks that are not type of 'button'
+    if (!event.target.matches('button')){
+      return;
+    }
+    //run for any button with operator class (-,+,/,*,=)
+    if (event.target.classList.contains('operator')){
+      this.inputOperator(event.target.innerHTML);
+      return;
+    }
+    //run for any button with decimal class
+    if (event.target.classList.contains('decimal')){
+      this.inputDecimal(event.target.innerHTML);
+      return;
+    }
+    //run for any button with clear class
+    if (event.target.classList.contains('clear')){
+      this.clearCalculator();
+      return;
+    }
+    //run for any button with digit class
+    if (event.target.classList.contains('digit')){
+      this.inputDigit(event.target.innerHTML)
+      return;
+    }
+  }
+  
+  //render the main calculator component, use map to generate all the buttons inside of it while passing props down to the buttons from state array.
+  render() {
+    return(
+      <div id="full-calc">
+        <div id="display">{this.state.displayValue}</div>
+        <div id="calc-pad">
+          {this.state.buttonInfo.map(item => (
+          <Button 
+            btKeyChar={item.keyChar}
+            btID={item.id}
+            btClass={item.class}
+          />
+          ))}
+        </div>
+      </div>   
+    )
+  }
+}
+
+//calculator button template
+class Button extends React.Component {
+  constructor(props){
+    super(props);
+  }
+  render() {
+    return(
+      <button id={this.props.btID} class={this.props.btClass} type="button">{this.props.btKeyChar}</button>
+    )
+  }
+}
+
+//container app
+class App extends React.Component {
+  render(){
+    return(
+    <div>
+      <Calculator />  
+    </div>
+    );
+  }
+}
+
+//render to the DOM
+ReactDOM.render(
+<Provider>
+  <App/>
+  </Provider>, document.getElementById('root')
+);

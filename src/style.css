@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono');
+
+/* define area names for grid*/
+#zero { grid-area: zero }
+#one { grid-area: one }
+#two { grid-area: two }
+#three { grid-area: three }
+#four { grid-area: four }
+#five { grid-area: five }
+#six { grid-area: six }
+#seven { grid-area: seven }
+#eight { grid-area: eight }
+#nine { grid-area: nine }
+#equals { grid-area: equals }
+#add { grid-area: add }
+#subtract { grid-area: subtract }
+#multiply { grid-area: multiply }
+#divide { grid-area: divide }
+#decimal { grid-area: decimal }
+#clear { grid-area: clear }
+
+* {
+    font-size: 5vw;
+    font-family: 'Roboto Mono', monospace
+}
+
+#full-calc {
+  background-color: #cdcfd3;
+  padding: 10px 
+}
+
+body { margin: 0 }
+
+#root {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #e6f7ff
+}
+
+#display, #calc-pad { 
+    width: 50vw;
+    padding: 2vh
+}
+
+#display {
+  height: 15vh;
+  display: grid;
+  align-items: center;
+  justify-content: end;
+  background-color: #858a93 
+}
+
+#calc-pad {
+  background-color: #cdcfd3;
+  height: 50vh;
+  display: grid;
+  grid-gap: .5vh;
+  grid-template-areas:
+    'seven eight nine add'
+    'four five six subtract'
+    'one two three multiply'
+    'zero zero decimal divide'
+    'clear clear clear equals'
+}
+
+@media only screen and (min-width: 600px) {
+  * { font-size: 3vw }
+}
